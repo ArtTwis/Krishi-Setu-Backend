@@ -2,10 +2,10 @@
   "name": "krishi-setu-backend",
   "version": "1.0.0",
   "description": "AgriTrack is a Node.js-based backend application designed to store, manage, and track comprehensive farmer records. personal details, land ownership, crop cultivation, financial information, bank loans, and government scheme benefits in a structured digital format. ",
-  "main": "src/index.js",
   "type": "module",
+  "main": "index.js",
   "scripts": {
-    "start": "nodemon src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "repository": {
     "type": "git",

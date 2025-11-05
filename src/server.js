@@ -3,6 +3,9 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
 
 const server = express();
@@ -32,16 +35,31 @@ server.use(
 // middleware to secure Express apps by setting HTTP response headers.
 server.use(helmet());
 
-// middleware for HTTP request logger.
-server.use(morgan("combined"));
+/*========================================================*/
+// middleware for HTTP request logger and create a write stream (in append mode)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, "..");
+const logDirectory = path.join(rootDir, "logs");
+if (!fs.existsSync(logDirectory)) fs.mkdirSync(logDirectory);
+
+let accessLogStream = fs.createWriteStream(
+  path.join(logDirectory, "access.log"),
+  {
+    flags: "a",
+  }
+);
+
+server.use(morgan("combined", { stream: accessLogStream }));
+/*========================================================*/
 
 server.use(express.static("public"));
 
 server.use(cookieParser());
 
-// /*==============
-// =====Routes=====
-// ==============*/
+/*==============
+=====Routes=====
+==============*/
 
 // import userAuthRouter from "./routes/auth.routes.js";
 // import userRouter from "./routes/user.routes.js";
