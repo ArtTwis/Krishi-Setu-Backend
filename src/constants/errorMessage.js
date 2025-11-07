@@ -6,6 +6,8 @@ export const errorMessages = {
     "Error: Required information is missing. Please complete the form to continue..",
   invalidEmail:
     "Error: Oops, that email address doesn't look right. Please try again..",
+  invalidToken:
+    "Error: Oops, that token doesn't look right. Please try again..",
   emailAlreadyExist:
     "Error: Email address already exists. Please choose a different email address to continue..",
   internalServerError:

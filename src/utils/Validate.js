@@ -1,35 +1,40 @@
 import { errorMessages } from "../constants/errorMessage.js";
 import { statusCodes } from "../constants/statusCodes.js";
-import ApiError from "./ApiError";
+import ApiError from "./ApiError.js";
 
-export const validate = (schema, validationTargets) => (req, res, next) => {
-  try {
-    const dataToValidate = req[validationTargets];
+export const validateRequest = (schema) => {
+  return (req, res, next) => {
+    const validationTargets = ["body", "params", "query"];
+    const errors = [];
 
-    const { error } = schema.validate(dataToValidate, {
-      abortEarly: false, // show all errors
-      allowUnknown: false, // disallow extra fields
-      stripUnknown: true, // remove unknown fields
-    });
+    for (const target of validationTargets) {
+      if (schema[target]) {
+        const { error, value } = schema[target].validate(req[target], {
+          abortEarly: false, // show all validation errors
+          allowUnknown: true, // ignore extra fields
+          stripUnknown: true, // remove unknown fields
+        });
 
-    if (error) {
-      return res.status(statusCodes.error.validationError).json(
-        new ApiError(
-          statusCodes.error.validationError,
-          error.details.map((err) => ({
-            message: err.message,
-            path: err.path.join("."),
-          })),
-          "Validation failed : " + error.message
-        )
-      );
+        if (error) {
+          errors.push(...error.details.map((err) => err.message));
+        } else {
+          req[target] = value; // assign sanitized data back
+        }
+      }
+    }
+
+    if (errors.length) {
+      return res
+        .status(statusCodes.error.validationError)
+        .json(
+          new ApiError(
+            statusCodes.error.validationError,
+            errors,
+            errorMessages.invalidFieldValues
+          )
+        );
     }
 
     next();
-  } catch (err) {
-    console.error("Validation Middleware Error:", err);
-    res
-      .status(500)
-      .json({ success: false, message: errorMessages.invalidFieldValues });
-  }
+  };
 };

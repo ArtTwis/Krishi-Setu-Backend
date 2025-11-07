@@ -17,7 +17,8 @@ const server = express();
 server.use(
   cors({
     origin: process.env.CORS_ORIGIN,
-    allowedHeaders: "",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
@@ -35,8 +36,11 @@ server.use(
 // middleware to secure Express apps by setting HTTP response headers.
 server.use(helmet());
 
-/*========================================================*/
-// middleware for HTTP request logger and create a write stream (in append mode)
+/*==============
+==== MORGAN ====
+* middleware for HTTP request logger
+* create a write stream (in append mode)
+==============*/
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
@@ -61,17 +65,11 @@ server.use(cookieParser());
 =====Routes=====
 ==============*/
 
-// import userAuthRouter from "./routes/auth.routes.js";
-// import userRouter from "./routes/user.routes.js";
-// import serviceRouter from "./routes/service.routes.js";
-// import appointmentRouter from "./routes/appointment.routes.js";
+import userAuthRouter from "./routes/userAuth.routes.js";
 
-// app.use(`/api/${process.env.VEDA_API_VERSION}/auth`, userAuthRouter);
-// app.use(`/api/${process.env.VEDA_API_VERSION}/route`, userRouter);
-// app.use(`/api/${process.env.VEDA_API_VERSION}/route`, serviceRouter);
-// app.use(`/api/${process.env.VEDA_API_VERSION}/route`, appointmentRouter);
+server.use(`/api/${process.env.KRISHI_SETU_API_VERSION}/auth`, userAuthRouter);
 
-// //  Handle invalid request
+//  Handle invalid request
 server.use(notFoundMiddleware);
 
 export default server;
