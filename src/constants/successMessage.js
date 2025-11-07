@@ -12,8 +12,9 @@ export const successMessages = {
   recordDeleted: "Record deleted successfully..",
   userAccountDisabled:
     "User account temporarily disabled. They will not be able to access the system until re-enabled..",
-  userAccountEnabled:
+  userAccountReActivated:
     "User account re-activated! They can now resume using their account without any restrictions..",
   updatedUserProfile:
     "User information updated! Your profile now reflects the latest changes..",
+  verifyUserAccount: "User account verified successfully!",
 };
