@@ -38,4 +38,6 @@ export const errorMessages = {
     "Error: No user found with the provided detail. Please try again or contact the system administrator..",
   failedToRetrievedRecords:
     "Error: Failed to retrieved records due to a server-side error. Please try again later or contact the system administrator..",
+  failedToSendEmail:
+    "Error: Failed to send email due to a server-side error. Please try again later or contact the system administrator..",
 };
