@@ -9,7 +9,7 @@ import {
   registerUserRequestSchema,
   verifyUserRequestSchema,
 } from "./validationSchemas/userAuth.validation.js";
-import { validateRequest } from "../utils/Validate.js";
+import { validateRequest } from "../utils/validate.util.js";
 
 const router = Router();
 

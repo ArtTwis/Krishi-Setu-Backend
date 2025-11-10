@@ -1,6 +1,6 @@
 import { UserAuth } from "../models/userAuth.model.js";
-import ApiError from "../utils/ApiError.js";
-import ApiResponse from "../utils/ApiResponse.js";
+import ApiError from "../utils/apiError.util.js";
+import ApiResponse from "../utils/apiResponse.util.js";
 import { statusCodes } from "../constants/statusCodes.js";
 import { successMessages } from "../constants/successMessage.js";
 import { errorMessages } from "../constants/errorMessage.js";
@@ -10,7 +10,7 @@ import {
   MailTypeEnum,
   UserTypeEnum,
 } from "../constants/common.js";
-import { sendMail } from "../utils/Nodemailer.js";
+import { sendMail } from "../utils/nodemailer.util.js";
 import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userAuthenticationId) => {

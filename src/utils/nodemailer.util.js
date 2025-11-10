@@ -8,7 +8,7 @@ import { verifyUserAccountEmailTemplate } from "../emailTemplates/verifyUserAcco
 import { registrationSuccessEmailTemplate } from "../emailTemplates/registrationSuccessfull.template.js";
 import { statusCodes } from "../constants/statusCodes.js";
 import { errorMessages } from "../constants/errorMessage.js";
-import ApiError from "./ApiError.js";
+import ApiError from "./apiError.util.js";
 
 // --------------------
 // Transporter Setup
