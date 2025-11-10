@@ -1,13 +1,22 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 import { SALT, UserTypeEnum } from "../constants/common.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-const userAuthSchema = new mongoose.Schema(
+const adminAuthSchema = new mongoose.Schema(
   {
-    name: {
+    businessName: {
       type: String,
       required: true,
+    },
+    businessOwner: {
+      type: String,
+      required: true,
+    },
+    about: {
+      type: String,
+      required: false,
+      default: "",
     },
     email: {
       type: String,
@@ -37,7 +46,7 @@ const userAuthSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: UserTypeEnum,
-      default: UserTypeEnum.user,
+      default: UserTypeEnum.admin,
     },
     isVerified: {
       type: Boolean,
@@ -49,29 +58,24 @@ const userAuthSchema = new mongoose.Schema(
       required: true,
       default: false,
     },
-    adminId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "Admin",
-    },
   },
   {
     timestamps: true,
   }
 );
 
-userAuthSchema.pre("save", async function (next) {
+adminAuthSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     this.password = await bcrypt.hash(this.password, SALT);
   }
   next();
 });
 
-userAuthSchema.methods.isPasswordCorrect = async function (password) {
+adminAuthSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-userAuthSchema.methods.generateAccessToken = async function () {
+adminAuthSchema.methods.generateAccessToken = async function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -84,7 +88,7 @@ userAuthSchema.methods.generateAccessToken = async function () {
   );
 };
 
-userAuthSchema.methods.generateRefreshToken = async function () {
+adminAuthSchema.methods.generateRefreshToken = async function () {
   return jwt.sign(
     {
       _id: this._id,
@@ -97,4 +101,4 @@ userAuthSchema.methods.generateRefreshToken = async function () {
   );
 };
 
-export const UserAuth = mongoose.model("User", userAuthSchema);
+export const AdminAuth = mongoose.model("Admin", adminAuthSchema);

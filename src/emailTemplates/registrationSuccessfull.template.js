@@ -1,6 +1,10 @@
 import { APPLICATION_NAME } from "../constants/common.js";
 
-export const registrationSuccessEmailTemplate = (userName, userPassword) => {
+export const registrationSuccessEmailTemplate = (
+  userName,
+  userEmail,
+  userPassword
+) => {
   return `
   <!DOCTYPE html>
   <html lang="en" style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 0; margin: 0;">
@@ -9,6 +13,15 @@ export const registrationSuccessEmailTemplate = (userName, userPassword) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Email Verification Successful</title>
       <style>
+        body {
+          font-family: Arial, sans-serif;
+          font-size: 15px;
+          color: #333333;
+          line-height: 1.6;
+          background-color: #f8f9fa;
+          margin: 0;
+          padding: 0;
+        }
         .container {
           max-width: 600px;
           background-color: #ffffff;
@@ -22,13 +35,11 @@ export const registrationSuccessEmailTemplate = (userName, userPassword) => {
           color: white;
           padding: 20px 30px;
           text-align: center;
-          font-size: 20px;
+          font-size: 18px;
           font-weight: bold;
         }
         .body {
           padding: 30px;
-          color: #333333;
-          line-height: 1.6;
         }
         .highlight {
           font-weight: bold;
@@ -38,7 +49,7 @@ export const registrationSuccessEmailTemplate = (userName, userPassword) => {
           background-color: #f0f4f3;
           border-left: 4px solid #2a9d8f;
           padding: 12px 16px;
-          font-size: 16px;
+          font-size: 15px;
           margin: 20px 0;
           word-break: break-word;
         }
@@ -50,6 +61,7 @@ export const registrationSuccessEmailTemplate = (userName, userPassword) => {
           padding: 12px 24px;
           border-radius: 6px;
           font-weight: bold;
+          font-size: 15px;
           margin-top: 20px;
         }
         .footer {
@@ -70,13 +82,14 @@ export const registrationSuccessEmailTemplate = (userName, userPassword) => {
           <p>We’re happy to inform you that your email has been successfully verified 🎉</p>
           <p>You can now log in to your account using the following credentials:</p>
           <div class="password-box">
-            <strong>Password:</strong> ${userPassword}
+            <div><strong>User Email:</strong> ${userEmail}</div>
+            <div><strong>Password:</strong> ${userPassword}</div>
           </div>
           <p>If you didn’t request this, please ignore this email.</p>
           <p>Thanks for being a part of <span class="highlight">${APPLICATION_NAME}</span>.</p>
         </div>
         <div class="footer">
-          &copy; ${new Date().getFullYear()} ${process.env.APPLICATION_NAME}. All rights reserved.
+          &copy; ${new Date().getFullYear()} ${APPLICATION_NAME}. All rights reserved.
         </div>
       </div>
     </body>

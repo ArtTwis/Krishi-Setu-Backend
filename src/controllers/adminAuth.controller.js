@@ -1,4 +1,4 @@
-import { UserAuth } from "../models/userAuth.model.js";
+import { AdminAuth } from "../models/adminAuth.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { statusCodes } from "../constants/statusCodes.js";
@@ -12,27 +12,38 @@ import {
 } from "../constants/common.js";
 import { sendMail } from "../utils/Nodemailer.js";
 import jwt from "jsonwebtoken";
+import { generateUniqueId } from "../utils/common.util.js";
 
-const generateAccessAndRefreshToken = async (userAuthenticationId) => {
-  const userAuth = await UserAuth.findById(userAuthenticationId);
+const generateAccessAndRefreshToken = async (adminAuthenticationId) => {
+  const adminAuth = await AdminAuth.findById(adminAuthenticationId);
 
-  const accessToken = await userAuth.generateAccessToken();
+  const accessToken = await adminAuth.generateAccessToken();
 
-  const refreshToken = await userAuth.generateRefreshToken();
+  const refreshToken = await adminAuth.generateRefreshToken();
 
-  userAuth.refreshToken = refreshToken;
+  adminAuth.refreshToken = refreshToken;
 
-  await userAuth.save({ validateBeforeSave: false });
+  await adminAuth.save({ validateBeforeSave: false });
 
   return { accessToken, refreshToken };
 };
 
-export const registerUser = async (req, res) => {
+export const registerAdmin = async (req, res) => {
   try {
-    const { name, email, mobile } = req.body;
+    const {
+      businessName,
+      businessOwner,
+      businessAddress,
+      about,
+      email,
+      mobile,
+      city,
+      state,
+      country,
+    } = req.body;
 
     //  Check if user already exist
-    const existingUser = await UserAuth.findOne({ email });
+    const existingUser = await AdminAuth.findOne({ email });
     if (existingUser) {
       return res
         .status(statusCodes.error.conflicts)
@@ -52,30 +63,40 @@ export const registerUser = async (req, res) => {
       }
     );
 
-    // Create new user
-    const user = await UserAuth.create({
-      name,
+    // Create new admin
+    const admin = await AdminAuth.create({
+      businessName,
+      businessOwner,
+      businessAddress,
+      about,
       email,
       mobile,
-      refreshToken: null,
+      city,
+      state,
+      country,
+      role: UserTypeEnum.admin,
       password: defaultPassword + mobile.slice(-4),
+      refreshToken: null,
       verificationToken,
-      role: UserTypeEnum.user,
     });
 
     // Convert mongoose document to plain JS object and remove sensitive fields
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
+    const adminResponse = admin.toObject();
+    delete adminResponse.password;
+    delete adminResponse.refreshToken;
 
     // Sending welcome mail to registered user
-    if (user.email) {
-      const mail = await sendMail(MailTypeEnum.verification, userResponse, res);
+    if (admin.email) {
+      const mail = await sendMail(
+        MailTypeEnum.verification,
+        adminResponse,
+        res
+      );
       console.log("mail.messageId :>> ", mail.messageId);
     }
 
     // Remove verification token before sending response
-    delete userResponse.verificationToken;
+    delete adminResponse.verificationToken;
 
     // Return success response
     return res
@@ -83,8 +104,8 @@ export const registerUser = async (req, res) => {
       .json(
         new ApiResponse(
           statusCodes.success.created,
-          userResponse,
-          successMessages.newUserCreated
+          adminResponse,
+          successMessages.newAdminCreated
         )
       );
   } catch (error) {
@@ -101,7 +122,7 @@ export const registerUser = async (req, res) => {
   }
 };
 
-export const verifyUser = async (req, res) => {
+export const verifyAdmin = async (req, res) => {
   try {
     const { token } = req.params;
 
@@ -119,14 +140,14 @@ export const verifyUser = async (req, res) => {
     }
 
     //  Find user by email and update isVerified and isActive
-    const user = await UserAuth.findOneAndUpdate(
+    const admin = await AdminAuth.findOneAndUpdate(
       { email },
       { $set: { isVerified: true, isActive: true } },
       { new: true }
     );
 
-    //  If not user than return res with error
-    if (!user) {
+    //  If not admin than return res with error
+    if (!admin) {
       return res
         .status(statusCodes.error.notFound)
         .json(
@@ -134,13 +155,13 @@ export const verifyUser = async (req, res) => {
         );
     }
 
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
-    delete userResponse.verificationToken;
+    const adminResponse = admin.toObject();
+    delete adminResponse.password;
+    delete adminResponse.refreshToken;
+    delete adminResponse.verificationToken;
 
     // Sending registration success mail to registered user
-    const mail = await sendMail(MailTypeEnum.registration, userResponse);
+    const mail = await sendMail(MailTypeEnum.registration, adminResponse);
     console.log("mail.messageId :>> ", mail.messageId);
 
     // Return success response
@@ -167,15 +188,15 @@ export const verifyUser = async (req, res) => {
   }
 };
 
-export const loginUser = async (req, res) => {
+export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     //  Get user by email
-    const userAuthResponse = await UserAuth.findOne({ email });
+    const adminAuthResponse = await AdminAuth.findOne({ email });
 
-    //  If no user return res with error
-    if (!userAuthResponse) {
+    //  If no admin return res with error
+    if (!adminAuthResponse) {
       return res
         .status(statusCodes.error.notFound)
         .json(
@@ -188,7 +209,7 @@ export const loginUser = async (req, res) => {
     }
 
     //  Compare password
-    const isPasswordValid = await userAuthResponse.isPasswordCorrect(password);
+    const isPasswordValid = await adminAuthResponse.isPasswordCorrect(password);
 
     //  If invalid password return res with error
     if (!isPasswordValid) {
@@ -204,7 +225,7 @@ export const loginUser = async (req, res) => {
     }
 
     //  Check is user verified and active
-    const { isVerified, isActive } = userAuthResponse;
+    const { isVerified, isActive } = adminAuthResponse;
     if (!(isVerified && isActive)) {
       return res
         .status(statusCodes.error.unauthorized)
@@ -219,7 +240,7 @@ export const loginUser = async (req, res) => {
 
     //  Generate Access_Token and Refresh_Token
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-      userAuthResponse._id
+      adminAuthResponse._id
     );
 
     //  If not Access_Token || Refresh_Token return res with error
@@ -235,10 +256,10 @@ export const loginUser = async (req, res) => {
         );
     }
 
-    const userResponse = userAuthResponse.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
-    delete userResponse.verificationToken;
+    const adminResponse = adminAuthResponse.toObject();
+    delete adminResponse.password;
+    delete adminResponse.refreshToken;
+    delete adminResponse.verificationToken;
 
     //  Return user with Access_Token and Refresh_Token
     return res
@@ -247,13 +268,13 @@ export const loginUser = async (req, res) => {
       .cookie("refreshToken", refreshToken, cookiesOptions)
       .json(
         new ApiResponse(
-          200,
+          statusCodes.success.ok,
           {
-            user: userResponse,
+            adminResponse,
             accessToken,
             refreshToken,
           },
-          successMessages.userLoggedIn
+          successMessages.loginSuccess
         )
       );
   } catch (error) {

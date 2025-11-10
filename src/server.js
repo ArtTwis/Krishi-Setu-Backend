@@ -66,8 +66,11 @@ server.use(cookieParser());
 ==============*/
 
 import userAuthRouter from "./routes/userAuth.routes.js";
+import adminAuthRouter from "./routes/adminAuth.routes.js";
 
 server.use(`/api/${process.env.KRISHI_SETU_API_VERSION}/auth`, userAuthRouter);
+
+server.use(`/api/${process.env.KRISHI_SETU_API_VERSION}/auth`, adminAuthRouter);
 
 //  Handle invalid request
 server.use(notFoundMiddleware);
