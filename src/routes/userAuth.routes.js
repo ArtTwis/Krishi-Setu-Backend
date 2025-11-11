@@ -5,8 +5,10 @@ import {
   verifyAccount,
   logoutAccount,
   reGenerateAccessToken,
+  changePassword,
 } from "../controllers/auth.controller.js";
 import {
+  changePasswordUserRequestSchema,
   loginUserRequestSchema,
   logoutUserRequestSchema,
   registerUserRequestSchema,
@@ -55,5 +57,14 @@ router
 router
   .route("/user/regenerateToken")
   .post(attachRole(UserTypeEnum.user), reGenerateAccessToken);
+
+router
+  .route("/user/change-password")
+  .put(
+    validateRequest(changePasswordUserRequestSchema),
+    attachRole(UserTypeEnum.user),
+    verifyJwtToken,
+    changePassword
+  );
 
 export default router;

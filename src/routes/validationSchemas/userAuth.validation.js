@@ -1,5 +1,4 @@
 import Joi from "joi";
-import { UserTypeEnum } from "../../constants/common.js";
 
 export const registerUserRequestSchema = {
   body: Joi.object({
@@ -39,4 +38,22 @@ export const loginUserRequestSchema = {
 
 export const logoutUserRequestSchema = {
   body: Joi.object({}),
+};
+
+export const changePasswordUserRequestSchema = {
+  body: Joi.object({
+    oldPassword: Joi.string().min(8).max(50).required().label("Old Password"),
+    newPassword: Joi.string()
+      .pattern(
+        new RegExp(
+          "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#_\\-])[A-Za-z\\d@$!%*?&#_\\-]{8,50}$"
+        )
+      )
+      .required()
+      .messages({
+        "string.pattern.base":
+          "New password must be 8–50 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      })
+      .label("New Password"),
+  }),
 };

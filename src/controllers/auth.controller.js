@@ -461,9 +461,70 @@ export const reGenerateAccessToken = async (req, res) => {
   } catch (error) {
     console.log("error :>> ", error);
     return res
-      .status(401)
+      .status(statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(401, error?.message || errorMessages.invalidRefreshToken)
+        new ApiError(
+          statusCodes.serverError.internalServerError,
+          errorMessages.internalServerError
+        )
+      );
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword, role } = req.body;
+
+    const Model = role === UserTypeEnum.admin ? AdminAuth : UserAuth;
+
+    const authResponse = await Model.findById(req.auth?._id);
+
+    if (!authResponse) {
+      return res
+        .status(statusCodes.error.unauthorized)
+        .json(
+          new ApiError(
+            statusCodes.error.unauthorized,
+            errorMessages.unauthorizedRequest
+          )
+        );
+    }
+
+    const isPasswordCorrect = await authResponse.isPasswordCorrect(oldPassword);
+
+    if (!isPasswordCorrect) {
+      return res
+        .status(statusCodes.error.badRequest)
+        .json(
+          new ApiError(
+            statusCodes.error.badRequest,
+            errorMessages.invalidOldPassword
+          )
+        );
+    }
+
+    authResponse.password = newPassword;
+
+    await authResponse.save({ validateBeforeSave: false });
+
+    return res
+      .status(statusCodes.success.ok)
+      .json(
+        new ApiResponse(
+          statusCodes.success.ok,
+          {},
+          successMessages.passwordChanged
+        )
+      );
+  } catch (error) {
+    console.log("error :>> ", error);
+    return res
+      .status(statusCodes.serverError.internalServerError)
+      .json(
+        new ApiError(
+          statusCodes.serverError.internalServerError,
+          errorMessages.internalServerError
+        )
       );
   }
 };
