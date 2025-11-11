@@ -3,15 +3,19 @@ import {
   loginAccount,
   registerAccount,
   verifyAccount,
-} from "../controllers/signUp.controller.js";
+  logoutAccount,
+  reGenerateAccessToken,
+} from "../controllers/auth.controller.js";
 import {
   loginAdminRequestSchema,
   registerAdminRequestSchema,
   verifyAdminRequestSchema,
+  logoutAdminRequestSchema,
 } from "./validationSchemas/adminAuth.validation.js";
 import { validateRequest } from "../utils/validate.util.js";
 import { attachRole } from "../middlewares/attachRole.middleware.js";
 import { UserTypeEnum } from "../constants/common.js";
+import { verifyJwtToken } from "../utils/auth.util.js";
 
 const router = Router();
 
@@ -38,5 +42,18 @@ router
     attachRole(UserTypeEnum.admin),
     loginAccount
   );
+
+router
+  .route("/admin/logout")
+  .post(
+    validateRequest(logoutAdminRequestSchema),
+    attachRole(UserTypeEnum.admin),
+    verifyJwtToken,
+    logoutAccount
+  );
+
+router
+  .route("/admin/regenerateToken")
+  .post(attachRole(UserTypeEnum.admin), reGenerateAccessToken);
 
 export default router;

@@ -39,3 +39,7 @@ export const loginAdminRequestSchema = {
     password: Joi.string().required(),
   }),
 };
+
+export const logoutAdminRequestSchema = {
+  body: Joi.object({}),
+};

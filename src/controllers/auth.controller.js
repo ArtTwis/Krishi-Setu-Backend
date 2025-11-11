@@ -327,3 +327,143 @@ export const loginAccount = async (req, res) => {
       );
   }
 };
+
+export const logoutAccount = async (req, res) => {
+  try {
+    const { role } = req.body;
+
+    const Model = role === UserTypeEnum.admin ? AdminAuth : UserAuth;
+
+    await Model.findByIdAndUpdate(
+      req.auth._id,
+      {
+        $unset: {
+          refreshToken: 1, // this removes the field from the document..
+        },
+      },
+      { new: true }
+    );
+
+    return res
+      .status(statusCodes.success.ok)
+      .clearCookie("accessToken", cookiesOptions)
+      .clearCookie("refreshToken", cookiesOptions)
+      .json(
+        new ApiResponse(
+          statusCodes.success.ok,
+          null,
+          successMessages.loggedOutSuccess
+        )
+      );
+  } catch (error) {
+    console.log("error :>> ", error);
+    return res
+      .status(statusCodes.serverError.internalServerError)
+      .json(
+        new ApiError(
+          statusCodes.serverError.internalServerError,
+          error,
+          errorMessages.internalServerError
+        )
+      );
+  }
+};
+
+export const reGenerateAccessToken = async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    return res
+      .status(statusCodes.error.unauthorized)
+      .json(
+        new ApiError(
+          statusCodes.error.unauthorized,
+          errorMessages.invalidRefreshToken
+        )
+      );
+  }
+
+  try {
+    const decodedToken = await jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    if (!decodedToken) {
+      return res
+        .status(statusCodes.error.unauthorized)
+        .json(
+          new ApiError(
+            statusCodes.error.unauthorized,
+            errorMessages.expiredRefreshToken
+          )
+        );
+    }
+
+    const { role } = req.body;
+
+    const Model = UserTypeEnum.admin === role ? AdminAuth : UserAuth;
+
+    const authResponse = await Model.findById(decodedToken?._id).select(
+      "-password -verificationToken"
+    );
+
+    if (!(authResponse && authResponse.refreshToken)) {
+      return res
+        .status(statusCodes.error.unauthorized)
+        .json(
+          new ApiError(
+            statusCodes.error.unauthorized,
+            errorMessages.invalidRefreshToken
+          )
+        );
+    }
+
+    if (incomingRefreshToken !== authResponse.refreshToken) {
+      return res
+        .status(statusCodes.error.unauthorized)
+        .json(
+          new ApiError(
+            statusCodes.error.unauthorized,
+            errorMessages.invalidRefreshToken
+          )
+        );
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+      Model,
+      authResponse._id
+    );
+
+    if (!accessToken && !refreshToken) {
+      return res
+        .status(statusCodes.serverError.internalServerError)
+        .json(
+          new ApiError(
+            statusCodes.serverError.internalServerError,
+            errorMessages.failedToGenerateNewTokens
+          )
+        );
+    }
+
+    return res
+      .status(statusCodes.success.created)
+      .cookie("accessToken", accessToken, cookiesOptions)
+      .cookie("refreshToken", refreshToken, cookiesOptions)
+      .json(
+        new ApiResponse(
+          statusCodes.success.created,
+          { accessToken, refreshToken },
+          successMessages.tokenRegenerated
+        )
+      );
+  } catch (error) {
+    console.log("error :>> ", error);
+    return res
+      .status(401)
+      .json(
+        new ApiError(401, error?.message || errorMessages.invalidRefreshToken)
+      );
+  }
+};

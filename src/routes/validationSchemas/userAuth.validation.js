@@ -36,3 +36,7 @@ export const loginUserRequestSchema = {
     password: Joi.string().required(),
   }),
 };
+
+export const logoutUserRequestSchema = {
+  body: Joi.object({}),
+};
