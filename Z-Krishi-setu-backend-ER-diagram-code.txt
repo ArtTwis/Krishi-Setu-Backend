@@ -1,0 +1,126 @@
+title Krishi-Setu
+
+admins [icon: azure-users] {
+  _id ObjectID PK
+  displayId String
+  businessName String
+  businessOwner String
+  businessAddress String
+  about String
+  email String Unique
+  mobile String Unique
+  password string
+  refreshToken String
+  verificationToken String
+  role String "ADMIN"
+  isVerified Boolean
+  isActive Boolean
+  city String
+  state String
+  country String
+  createdAt DateTime
+  updateAt DateTime
+}
+
+users [icon: user] {
+  _id ObjectID PK
+  name String
+  email String Unique
+  mobile String
+  password string
+  refreshToken String
+  verificationToken String
+  role String "USER"
+  isVerified Boolean
+  isActive Boolean
+  adminID ObjectID admins
+  createdAt DateTime
+  updateAt DateTime
+}
+
+farmers [icon: user] {
+  _id ObjectID PK
+  name String
+  fatherName String
+  contactNumber String
+  gender String
+  dob Date
+  aadharNumber String
+  adminID ObjectID admins
+  userID ObjectID users
+  createdAt DateTime
+  updateAt DateTime
+}
+
+addresses [icon: home] {
+  _id ObjectID PK
+  farmerID ObjectID farmers
+  address String
+  town String
+  district String
+  state String
+  country string
+  pincode String
+  createdAt DateTime
+  updateAt DateTime
+}
+
+bankAccounts [icon: bank] {
+  _id ObjectID PK
+  farmerID ObjectID farmers
+  bankName String
+  branchName String
+  accountHolderName String
+  accountNumber String
+  ifscCode String
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+landRecords [icon: landmark] {
+  _id ObjectID PK
+  farmerID ObjectID farmers
+  landArea Number
+  landType String ENUM("irrigated", "dry", "leased")
+  ownershipType String ENUM("owned", "leased", "joint")
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+loans [icon: rupee] {
+  _id ObjectID PK
+  farmerID ObjectID farmers
+  loanType String ENUM("crop loan", "equipment loan")
+  loanAmount Number
+  loanDate Date OPTIONAL
+  dueDate Date OPTIONAL
+  status String ENUM("pending", "paid", "defaulted")
+  issuer String
+  remarks String
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+finances [icon: currency] {
+  _id ObjectID PK
+  farmerID ObjectID farmers
+  outstandingBalance Number
+  financialLimit Number
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+admins._id < users.adminID
+
+admins._id < farmers.adminID
+users._id < farmers.userID
+
+addresses.farmerID - farmers._id
+
+bankAccounts.farmerID - farmers._id
+
+landRecords.farmerID - farmers._id
+
+loans.farmerID - farmers._id
+
+finances.farmerID - farmers._id
