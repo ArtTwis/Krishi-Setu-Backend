@@ -1,6 +1,6 @@
 import { APPLICATION_NAME } from "../constants/common.js";
 
-export const verifyUserAccountEmailTemplate = (name, verifyLink) => {
+export const verifyAccountEmailTemplate = (authName, verifyLink) => {
   return `
   <!DOCTYPE html>
   <html lang="en" style="font-family: Arial, sans-serif; background-color: #f6f9fc; padding: 0; margin: 0;">
@@ -69,7 +69,7 @@ export const verifyUserAccountEmailTemplate = (name, verifyLink) => {
         </div>
 
         <div class="content">
-          <p>Hi <strong>${name}</strong>,</p>
+          <p>Hi <strong>${authName}</strong>,</p>
           <p>
             Thank you for registering with <strong>${APPLICATION_NAME}</strong>!  
             Please verify your email address by clicking the button below.

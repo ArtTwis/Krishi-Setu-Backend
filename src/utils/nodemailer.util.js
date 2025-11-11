@@ -4,8 +4,9 @@ import {
   defaultPassword,
   MailTypeEnum,
 } from "../constants/common.js";
-import { verifyUserAccountEmailTemplate } from "../emailTemplates/verifyUserAccount.template.js";
-import { registrationSuccessEmailTemplate } from "../emailTemplates/registrationSuccessfull.template.js";
+import { verifyAccountEmailTemplate } from "../emailTemplates/verifyUserAccount.template.js";
+import { registrationSuccessfullEmailTemplate } from "../emailTemplates/registrationSuccessfull.template.js";
+import { changePasswordSuccessfullEmailTemplate } from "../emailTemplates/changePasswordSuccessfull.template.js";
 
 // --------------------
 // Transporter Setup
@@ -22,10 +23,8 @@ const transport = nodemailer.createTransport({
 // --------------------
 // Utility Functions
 // --------------------
-const getVerificationLink = (user) =>
-  `${process.env.BASE_URL}/api/v1/auth/${user.role.toLowerCase()}/verify/${user.verificationToken}`;
-
-const getUserDefaultPassword = (mobile) => defaultPassword + mobile.slice(-4);
+const getVerificationLink = (authResponse) =>
+  `${process.env.BASE_URL}/api/v1/auth/${authResponse.role.toLowerCase()}/verify/${authResponse.verificationToken}`;
 
 const getMailCategory = (mailType) => {
   const categories = {
@@ -43,22 +42,28 @@ const getMailSubject = (mailType) => {
   return subjects[mailType] || "General";
 };
 
-const getHTMLTemplate = (mailType, user) => {
-  const link = getVerificationLink(user);
+const getHTMLTemplate = (mailType, authResponse) => {
+  const link = getVerificationLink(authResponse);
 
   switch (mailType) {
     case MailTypeEnum.verification:
-      return verifyUserAccountEmailTemplate(
-        user.name || user.businessOwner,
+      return verifyAccountEmailTemplate(
+        authResponse.name || authResponse.businessOwner,
         link
       );
 
     case MailTypeEnum.registration:
-      return registrationSuccessEmailTemplate(
-        user.name || user.businessOwner,
-        user.email,
-        getUserDefaultPassword(user.mobile)
+      return registrationSuccessfullEmailTemplate(
+        authResponse.name || authResponse.businessOwner,
+        authResponse.email,
+        authResponse.mobile
       );
+
+    case MailTypeEnum.changePassword:
+      return changePasswordSuccessfullEmailTemplate(
+        authResponse.name || authResponse.businessOwner
+      );
+
     default:
       throw new Error(`Unsupported mail type: ${mailType}`);
   }
@@ -67,15 +72,15 @@ const getHTMLTemplate = (mailType, user) => {
 // --------------------
 // Core Function
 // --------------------
-export const sendMail = async (mailType, user) => {
+export const sendMail = async (mailType, authResponse) => {
   try {
-    const html = getHTMLTemplate(mailType, user);
+    const html = getHTMLTemplate(mailType, authResponse);
     const subject = getMailSubject(mailType);
     const category = getMailCategory(mailType);
 
     const info = await transport.sendMail({
       from: process.env.SENDER_EMAIL,
-      to: user.email,
+      to: authResponse.email,
       subject,
       html,
       category,
