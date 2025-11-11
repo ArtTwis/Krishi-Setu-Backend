@@ -5,12 +5,14 @@ import {
   verifyAccount,
   logoutAccount,
   reGenerateAccessToken,
+  changePassword,
 } from "../controllers/auth.controller.js";
 import {
   loginAdminRequestSchema,
   registerAdminRequestSchema,
   verifyAdminRequestSchema,
   logoutAdminRequestSchema,
+  changePasswordAdminRequestSchema,
 } from "./validationSchemas/adminAuth.validation.js";
 import { validateRequest } from "../utils/validate.util.js";
 import { attachRole } from "../middlewares/attachRole.middleware.js";
@@ -55,5 +57,14 @@ router
 router
   .route("/admin/regenerateToken")
   .post(attachRole(UserTypeEnum.admin), reGenerateAccessToken);
+
+router
+  .route("/admin/change-password")
+  .put(
+    validateRequest(changePasswordAdminRequestSchema),
+    attachRole(UserTypeEnum.admin),
+    verifyJwtToken,
+    changePassword
+  );
 
 export default router;
