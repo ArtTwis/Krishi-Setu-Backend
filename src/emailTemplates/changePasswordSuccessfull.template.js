@@ -1,19 +1,13 @@
 import { APPLICATION_NAME } from "../constants/common.js";
 
-const getUserDefaultPassword = (mobile) => defaultPassword + mobile.slice(-4);
-
-export const registrationSuccessfullEmailTemplate = (
-  authName,
-  authEmail,
-  authMobile
-) => {
+export const changePasswordSuccessfullEmailTemplate = (authName) => {
   return `
   <!DOCTYPE html>
   <html lang="en" style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 0; margin: 0;">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Email Verification Successful</title>
+      <title>Password Changed Successfully</title>
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -47,7 +41,7 @@ export const registrationSuccessfullEmailTemplate = (
           font-weight: bold;
           color: #2a9d8f;
         }
-        .password-box {
+        .info-box {
           background-color: #f0f4f3;
           border-left: 4px solid #2a9d8f;
           padding: 12px 16px;
@@ -77,18 +71,17 @@ export const registrationSuccessfullEmailTemplate = (
     <body>
       <div class="container">
         <div class="header">
-          ${APPLICATION_NAME} - Verification Successful
+          ${APPLICATION_NAME} - Password Changed
         </div>
         <div class="body">
           <p>Hi <span class="highlight">${authName}</span>,</p>
-          <p>We’re happy to inform you that your email has been successfully verified 🎉</p>
-          <p>You can now log in to your account using the following credentials:</p>
-          <div class="password-box">
-            <div><strong>User Email:</strong> ${authEmail}</div>
-            <div><strong>Password:</strong> ${getUserDefaultPassword(authMobile)}</div>
+          <p>This is to confirm that your account password has been changed successfully ✅</p>
+          <div class="info-box">
+            <p>If this was you, no further action is needed.</p>
+            <p>If you didn’t make this change, please <a href="#" class="highlight">reset your password immediately</a> or contact our support team.</p>
           </div>
-          <p>If you didn’t request this, please ignore this email.</p>
-          <p>Thanks for being a part of <span class="highlight">${APPLICATION_NAME}</span>.</p>
+          <p>We recommend keeping your password secure and avoiding reuse across multiple accounts.</p>
+          <p>Thanks for staying secure with <span class="highlight">${APPLICATION_NAME}</span>.</p>
         </div>
         <div class="footer">
           &copy; ${new Date().getFullYear()} ${APPLICATION_NAME}. All rights reserved.

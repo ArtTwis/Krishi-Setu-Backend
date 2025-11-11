@@ -101,17 +101,17 @@ export const registerAccount = async (req, res) => {
     const createdUser = await Model.create(newUserData);
 
     // Convert to object and sanitize
-    const response = createdUser.toObject();
-    delete response.password;
-    delete response.refreshToken;
+    const authResponse = createdUser.toObject();
+    delete authResponse.password;
+    delete authResponse.refreshToken;
 
     //  Send mail
     if (email) {
-      const mail = await sendMail(MailTypeEnum.verification, response, res);
+      const mail = await sendMail(MailTypeEnum.verification, authResponse);
       console.log("mail.messageId :>> ", mail.messageId);
     }
 
-    delete response.verificationToken;
+    delete authResponse.verificationToken;
 
     // Send response
     return res
@@ -119,7 +119,7 @@ export const registerAccount = async (req, res) => {
       .json(
         new ApiResponse(
           statusCodes.success.created,
-          response,
+          authResponse,
           isAdmin
             ? successMessages.newAdminCreated
             : successMessages.newUserCreated
@@ -189,7 +189,7 @@ export const verifyAccount = async (req, res) => {
     delete response.verificationToken;
 
     // Sending registration success mail to registered user
-    const mail = await sendMail(MailTypeEnum.registration, response, res);
+    const mail = await sendMail(MailTypeEnum.registration, response);
     if (!mail) {
       return res
         .status(statusCodes.success.ok)
@@ -506,6 +506,10 @@ export const changePassword = async (req, res) => {
     authResponse.password = newPassword;
 
     await authResponse.save({ validateBeforeSave: false });
+
+    //  Send mail
+    const mail = await sendMail(MailTypeEnum.changePassword, authResponse);
+    console.log("mail.messageId :>> ", mail.messageId);
 
     return res
       .status(statusCodes.success.ok)
