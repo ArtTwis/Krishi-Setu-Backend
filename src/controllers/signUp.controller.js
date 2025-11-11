@@ -42,6 +42,7 @@ export const registerAccount = async (req, res) => {
       city,
       state,
       country,
+      adminId,
     } = req.body;
 
     //  Select model and role-specific configuration
@@ -93,6 +94,7 @@ export const registerAccount = async (req, res) => {
       : {
           ...commonData,
           name,
+          adminId,
         };
 
     // Create record

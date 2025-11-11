@@ -19,7 +19,7 @@ router
   .route("/user/register")
   .post(
     validateRequest(registerUserRequestSchema),
-    attachRole(UserTypeEnum.admin),
+    attachRole(UserTypeEnum.user),
     registerAccount
   );
 

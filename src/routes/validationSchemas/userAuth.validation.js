@@ -13,7 +13,9 @@ export const registerUserRequestSchema = {
     mobile: Joi.string()
       .pattern(/^[0-9]{10}$/)
       .required(),
-    role: Joi.string().valid(UserTypeEnum.user).required(),
+    adminId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .message("Invalid admin id. Check and try again."),
   }),
 };
 
@@ -32,6 +34,5 @@ export const loginUserRequestSchema = {
       })
       .required(),
     password: Joi.string().required(),
-    role: Joi.string().valid(UserTypeEnum.user).required(),
   }),
 };
