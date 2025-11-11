@@ -17,4 +17,6 @@ export const successMessages = {
   updatedUserProfile:
     "User information updated! Your profile now reflects the latest changes..",
   verifyUserAccount: "User account verified successfully!",
+  verifyUserAccountButFailedToSendConfirmationMail:
+    "User account verified successfully but failed to send confirmation mail..",
 };

@@ -1,39 +1,56 @@
-import { UserAuth } from "../models/userAuth.model.js";
-import ApiError from "../utils/apiError.util.js";
-import ApiResponse from "../utils/apiResponse.util.js";
-import { statusCodes } from "../constants/statusCodes.js";
-import { successMessages } from "../constants/successMessage.js";
-import { errorMessages } from "../constants/errorMessage.js";
 import {
-  cookiesOptions,
+  UserTypeEnum,
   defaultPassword,
   MailTypeEnum,
-  UserTypeEnum,
+  cookiesOptions,
 } from "../constants/common.js";
+import { errorMessages } from "../constants/errorMessage.js";
+import { successMessages } from "../constants/successMessage.js";
+import { statusCodes } from "../constants/statusCodes.js";
+import { AdminAuth } from "../models/adminAuth.model.js";
+import { UserAuth } from "../models/userAuth.model.js";
 import { sendMail } from "../utils/nodemailer.util.js";
+import ApiError from "../utils/apiError.util.js";
+import ApiResponse from "../utils/apiResponse.util.js";
 import jwt from "jsonwebtoken";
 
-const generateAccessAndRefreshToken = async (userAuthenticationId) => {
-  const userAuth = await UserAuth.findById(userAuthenticationId);
+const generateAccessAndRefreshToken = async (model, authenticationId) => {
+  const auth = await model.findById(authenticationId);
 
-  const accessToken = await userAuth.generateAccessToken();
+  const accessToken = await auth.generateAccessToken();
 
-  const refreshToken = await userAuth.generateRefreshToken();
+  const refreshToken = await auth.generateRefreshToken();
 
-  userAuth.refreshToken = refreshToken;
+  auth.refreshToken = refreshToken;
 
-  await userAuth.save({ validateBeforeSave: false });
+  await auth.save({ validateBeforeSave: false });
 
   return { accessToken, refreshToken };
 };
 
-export const registerUser = async (req, res) => {
+export const registerAccount = async (req, res) => {
   try {
-    const { name, email, mobile } = req.body;
+    const {
+      role,
+      name,
+      businessName,
+      businessOwner,
+      businessAddress,
+      about,
+      email,
+      mobile,
+      city,
+      state,
+      country,
+    } = req.body;
 
-    //  Check if user already exist
-    const existingUser = await UserAuth.findOne({ email });
-    if (existingUser) {
+    //  Select model and role-specific configuration
+    const isAdmin = role === UserTypeEnum.admin;
+    const Model = isAdmin ? AdminAuth : UserAuth;
+
+    //  Check if user already exists
+    const existing = await Model.findOne({ email });
+    if (existing) {
       return res
         .status(statusCodes.error.conflicts)
         .json(
@@ -44,47 +61,66 @@ export const registerUser = async (req, res) => {
         );
     }
 
+    //  Generate verification token
     const verificationToken = jwt.sign(
       { email },
       process.env.VERIFICATION_TOKEN_SECRET,
-      {
-        expiresIn: process.env.VERIFICATION_TOKEN_EXPIRY,
-      }
+      { expiresIn: process.env.VERIFICATION_TOKEN_EXPIRY }
     );
 
-    // Create new user
-    const user = await UserAuth.create({
-      name,
+    //  Common data
+    const commonData = {
       email,
       mobile,
-      refreshToken: null,
       password: defaultPassword + mobile.slice(-4),
+      refreshToken: null,
       verificationToken,
-      role: UserTypeEnum.user,
-    });
+      role,
+    };
 
-    // Convert mongoose document to plain JS object and remove sensitive fields
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
+    // Merge role-specific fields
+    const newUserData = isAdmin
+      ? {
+          ...commonData,
+          businessName,
+          businessOwner,
+          businessAddress,
+          about,
+          city,
+          state,
+          country,
+        }
+      : {
+          ...commonData,
+          name,
+        };
 
-    // Sending welcome mail to registered user
-    if (user.email) {
-      const mail = await sendMail(MailTypeEnum.verification, userResponse, res);
+    // Create record
+    const createdUser = await Model.create(newUserData);
+
+    // Convert to object and sanitize
+    const response = createdUser.toObject();
+    delete response.password;
+    delete response.refreshToken;
+
+    //  Send mail
+    if (email) {
+      const mail = await sendMail(MailTypeEnum.verification, response, res);
       console.log("mail.messageId :>> ", mail.messageId);
     }
 
-    // Remove verification token before sending response
-    delete userResponse.verificationToken;
+    delete response.verificationToken;
 
-    // Return success response
+    // Send response
     return res
       .status(statusCodes.success.created)
       .json(
         new ApiResponse(
           statusCodes.success.created,
-          userResponse,
-          successMessages.newUserCreated
+          response,
+          isAdmin
+            ? successMessages.newAdminCreated
+            : successMessages.newUserCreated
         )
       );
   } catch (error) {
@@ -101,15 +137,28 @@ export const registerUser = async (req, res) => {
   }
 };
 
-export const verifyUser = async (req, res) => {
+export const verifyAccount = async (req, res) => {
   try {
     const { token } = req.params;
+    const { role } = req;
 
-    //  Verifying token
+    if (!role) {
+      return res
+        .status(statusCodes.error.badRequest)
+        .json(
+          new ApiError(
+            statusCodes.error.badRequest,
+            errorMessages.invalidRoleProvided
+          )
+        );
+    }
+
+    const Model = UserTypeEnum.admin === role ? AdminAuth : UserAuth;
+
+    //  Verify token
     const decoded = jwt.verify(token, process.env.VERIFICATION_TOKEN_SECRET);
-
-    //  If valid token destruct email else return res with error
     const { email } = decoded;
+
     if (!email) {
       return res
         .status(statusCodes.error.badRequest)
@@ -118,15 +167,13 @@ export const verifyUser = async (req, res) => {
         );
     }
 
-    //  Find user by email and update isVerified and isActive
-    const user = await UserAuth.findOneAndUpdate(
+    const updatedAccount = await Model.findOneAndUpdate(
       { email },
       { $set: { isVerified: true, isActive: true } },
       { new: true }
     );
 
-    //  If not user than return res with error
-    if (!user) {
+    if (!updatedAccount) {
       return res
         .status(statusCodes.error.notFound)
         .json(
@@ -134,13 +181,23 @@ export const verifyUser = async (req, res) => {
         );
     }
 
-    const userResponse = user.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
-    delete userResponse.verificationToken;
+    const response = updatedAccount.toObject();
+    delete response.password;
+    delete response.refreshToken;
+    delete response.verificationToken;
 
     // Sending registration success mail to registered user
-    const mail = await sendMail(MailTypeEnum.registration, userResponse);
+    const mail = await sendMail(MailTypeEnum.registration, response, res);
+    if (!mail) {
+      return res
+        .status(statusCodes.success.ok)
+        .json(
+          new ApiResponse(
+            statusCodes.success.ok,
+            successMessages.verifyUserAccountButFailedToSendConfirmationMail
+          )
+        );
+    }
     console.log("mail.messageId :>> ", mail.messageId);
 
     // Return success response
@@ -167,15 +224,16 @@ export const verifyUser = async (req, res) => {
   }
 };
 
-export const loginUser = async (req, res) => {
+export const loginAccount = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    //  Get user by email
-    const userAuthResponse = await UserAuth.findOne({ email });
+    const Model = role === UserTypeEnum.admin ? AdminAuth : UserAuth;
 
-    //  If no user return res with error
-    if (!userAuthResponse) {
+    //  Get account details by email
+    const authResponse = await Model.findOne({ email });
+
+    if (!authResponse) {
       return res
         .status(statusCodes.error.notFound)
         .json(
@@ -187,10 +245,8 @@ export const loginUser = async (req, res) => {
         );
     }
 
-    //  Compare password
-    const isPasswordValid = await userAuthResponse.isPasswordCorrect(password);
-
-    //  If invalid password return res with error
+    //  Validate password
+    const isPasswordValid = await authResponse.isPasswordCorrect(password);
     if (!isPasswordValid) {
       return res
         .status(statusCodes.error.badRequest)
@@ -203,8 +259,8 @@ export const loginUser = async (req, res) => {
         );
     }
 
-    //  Check is user verified and active
-    const { isVerified, isActive } = userAuthResponse;
+    //  Check if verified and active
+    const { isVerified, isActive } = authResponse;
     if (!(isVerified && isActive)) {
       return res
         .status(statusCodes.error.unauthorized)
@@ -217,12 +273,12 @@ export const loginUser = async (req, res) => {
         );
     }
 
-    //  Generate Access_Token and Refresh_Token
+    // Generate tokens
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-      userAuthResponse._id
+      Model,
+      authResponse._id
     );
 
-    //  If not Access_Token || Refresh_Token return res with error
     if (!(accessToken && refreshToken)) {
       return res
         .status(statusCodes.error.unauthorized)
@@ -235,25 +291,25 @@ export const loginUser = async (req, res) => {
         );
     }
 
-    const userResponse = userAuthResponse.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
-    delete userResponse.verificationToken;
+    const response = authResponse.toObject();
+    delete response.password;
+    delete response.refreshToken;
+    delete response.verificationToken;
 
-    //  Return user with Access_Token and Refresh_Token
+    //  Send response
     return res
-      .status(200)
+      .status(statusCodes.success.ok)
       .cookie("accessToken", accessToken, cookiesOptions)
       .cookie("refreshToken", refreshToken, cookiesOptions)
       .json(
         new ApiResponse(
-          200,
+          statusCodes.success.ok,
           {
-            user: userResponse,
+            account: response,
             accessToken,
             refreshToken,
           },
-          successMessages.userLoggedIn
+          successMessages.loginSuccess
         )
       );
   } catch (error) {

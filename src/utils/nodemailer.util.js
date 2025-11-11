@@ -6,9 +6,6 @@ import {
 } from "../constants/common.js";
 import { verifyUserAccountEmailTemplate } from "../emailTemplates/verifyUserAccount.template.js";
 import { registrationSuccessEmailTemplate } from "../emailTemplates/registrationSuccessfull.template.js";
-import { statusCodes } from "../constants/statusCodes.js";
-import { errorMessages } from "../constants/errorMessage.js";
-import ApiError from "./apiError.util.js";
 
 // --------------------
 // Transporter Setup
@@ -70,7 +67,7 @@ const getHTMLTemplate = (mailType, user) => {
 // --------------------
 // Core Function
 // --------------------
-export const sendMail = async (mailType, user, res) => {
+export const sendMail = async (mailType, user) => {
   try {
     const html = getHTMLTemplate(mailType, user);
     const subject = getMailSubject(mailType);
@@ -89,14 +86,6 @@ export const sendMail = async (mailType, user, res) => {
     };
   } catch (error) {
     console.log("error :>> ", error);
-    return res
-      .status(statusCodes.success.created)
-      .json(
-        new ApiError(
-          statusCodes.success.created,
-          error,
-          errorMessages.emailAlreadyExist
-        )
-      );
+    return false;
   }
 };

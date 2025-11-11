@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { UserTypeEnum } from "../../constants/common.js";
 
 export const registerAdminRequestSchema = {
   body: Joi.object({
