@@ -35,8 +35,8 @@ AgriTrack is a Node.js-based backend application designed to store, manage, and 
 
 ## ER Diagram
 
-![DB Models - ER Diagram](./veda-backend-ER-diagram.svg)
+![DB Models - ER Diagram](./Z-Krishi-setu-backend-ER-diagram-code.svg)
 
-> [ER Diagram code file](./veda-backend-ER-diagram-code.txt)
+> [ER Diagram code file](./Z-Krishi-setu-backend-ER-diagram-code.txt)
 
 ## Version 1.0
