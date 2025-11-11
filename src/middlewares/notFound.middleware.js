@@ -1,6 +1,6 @@
 import { errorMessages } from "../constants/errorMessage.js";
 import { statusCodes } from "../constants/statusCodes.js";
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/apiError.util.js";
 
 // not-found-middleware.js
 export const notFoundMiddleware = (req, res, next) => {

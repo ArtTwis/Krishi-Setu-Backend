@@ -1,4 +1,5 @@
 import Joi from "joi";
+import { UserTypeEnum } from "../../constants/common.js";
 
 export const registerUserRequestSchema = {
   body: Joi.object({
@@ -12,6 +13,9 @@ export const registerUserRequestSchema = {
     mobile: Joi.string()
       .pattern(/^[0-9]{10}$/)
       .required(),
+    adminId: Joi.string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .message("Invalid admin id. Check and try again."),
   }),
 };
 

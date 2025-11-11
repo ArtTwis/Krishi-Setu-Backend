@@ -1,6 +1,6 @@
 import { errorMessages } from "../constants/errorMessage.js";
 import { statusCodes } from "../constants/statusCodes.js";
-import ApiError from "./ApiError.js";
+import ApiError from "./apiError.util.js";
 
 export const validateRequest = (schema) => {
   return (req, res, next) => {

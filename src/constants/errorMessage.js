@@ -40,4 +40,6 @@ export const errorMessages = {
     "Error: Failed to retrieved records due to a server-side error. Please try again later or contact the system administrator..",
   failedToSendEmail:
     "Error: Failed to send email due to a server-side error. Please try again later or contact the system administrator..",
+  invalidRoleProvided:
+    "Error: Invalid role in request params. Please try again later or contact the system administrator..",
 };
