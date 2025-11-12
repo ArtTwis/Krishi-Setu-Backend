@@ -17,7 +17,7 @@ import {
 import { validateRequest } from "../utils/validate.util.js";
 import { attachRole } from "../middlewares/attachRole.middleware.js";
 import { UserTypeEnum } from "../constants/common.js";
-import { verifyJwtToken } from "../utils/auth.util.js";
+import { isAdmin, verifyJwtToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -25,6 +25,8 @@ router
   .route("/user/register")
   .post(
     validateRequest(registerUserRequestSchema),
+    verifyJwtToken,
+    isAdmin,
     attachRole(UserTypeEnum.user),
     registerAccount
   );

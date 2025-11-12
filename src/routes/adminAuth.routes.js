@@ -17,7 +17,7 @@ import {
 import { validateRequest } from "../utils/validate.util.js";
 import { attachRole } from "../middlewares/attachRole.middleware.js";
 import { UserTypeEnum } from "../constants/common.js";
-import { verifyJwtToken } from "../utils/auth.util.js";
+import { verifyJwtToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 

@@ -78,9 +78,9 @@ export const changePasswordSuccessfullEmailTemplate = (authName) => {
           <p>This is to confirm that your account password has been changed successfully ✅</p>
           <div class="info-box">
             <p>If this was you, no further action is needed.</p>
-            <p>If you didn’t make this change, please <a href="#" class="highlight">reset your password immediately</a> or contact our support team.</p>
+            <p>If you didn’t make this change, please contact our support team.</p>
           </div>
-          <p>We recommend keeping your password secure and avoiding reuse across multiple accounts.</p>
+          <p>We recommend keeping your password secure.</p>
           <p>Thanks for staying secure with <span class="highlight">${APPLICATION_NAME}</span>.</p>
         </div>
         <div class="footer">

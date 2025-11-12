@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { errorMessages } from "../constants/errorMessage.js";
-import ApiError from "./apiError.util.js";
+import ApiError from "../utils/apiError.util.js";
 import { AdminAuth } from "../models/adminAuth.model.js";
 import { UserAuth } from "../models/userAuth.model.js";
 import { UserTypeEnum } from "../constants/common.js";
@@ -60,6 +60,54 @@ export const verifyJwtToken = async (req, res, next) => {
       .status(statusCodes.error.badRequest)
       .json(
         new ApiError(statusCodes.error.badRequest, errorMessages.badRequest)
+      );
+  }
+};
+
+/**
+ * Restrict access to admin users only
+ */
+export const isAdmin = async (req, res, next) => {
+  try {
+    const token =
+      req.cookies?.accessToken ||
+      req.header("authorization")?.replace("Bearer ", "");
+
+    const decodedTokenInfo = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+    const authResponse = await AdminAuth.findById(decodedTokenInfo?._id).select(
+      "-password -verificationToken"
+    );
+
+    if (!authResponse) {
+      return res
+        .status(statusCodes.error.notFound)
+        .json(
+          new ApiError(statusCodes.error.notFound, errorMessages.userNotFound)
+        );
+    }
+
+    if (authResponse.role !== UserTypeEnum.admin) {
+      return res
+        .status(statusCodes.error.forbidden)
+        .json(
+          new ApiError(
+            statusCodes.error.forbidden,
+            errorMessages.failedForAdminAccess
+          )
+        );
+    }
+
+    next();
+  } catch (error) {
+    console.error("Admin verification error:", error);
+    return res
+      .status(statusCodes.error.unauthorized)
+      .json(
+        new ApiError(
+          statusCodes.error.unauthorized,
+          errorMessages.invalidAccessToken
+        )
       );
   }
 };
