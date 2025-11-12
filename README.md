@@ -39,7 +39,7 @@ AgriTrack is a Node.js-based backend application designed to store, manage, and 
 
 > [ER Diagram code file](./Z-Krishi-setu-backend-ER-diagram-code.txt)
 
-## Version 1.0
+## API Version 1.0
 
 - AdminAuth
 - post /api/v1/auth/admin/register ( validateRequest, attachRole, registerAccount )
@@ -57,7 +57,14 @@ AgriTrack is a Node.js-based backend application designed to store, manage, and 
 - post /api/v1/auth/user/regenerateToken ( attachRole, reGenerateAccessToken )
 - put /api/v1/auth/user/change-password ( validateRequest, attachRole, verifyJwtToken, changePassword )
 
-## Version 2.0
+<br />
+<br />
+<br />
+<br />
+
+# Future Release Tasks
+
+## API Version 2.0
 
 - AdminAuth
 - /api/v1/auth/admin/forgot-password

@@ -38,6 +38,7 @@ const getMailSubject = (mailType) => {
   const subjects = {
     [MailTypeEnum.verification]: `Verify your email to activate your ${APPLICATION_NAME} account`,
     [MailTypeEnum.registration]: `Your ${APPLICATION_NAME} account has been verified successfully`,
+    [MailTypeEnum.changePassword]: `Your ${APPLICATION_NAME} account password has been updated successfully`,
   };
   return subjects[mailType] || "General";
 };

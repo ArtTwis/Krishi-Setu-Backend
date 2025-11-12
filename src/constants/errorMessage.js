@@ -42,4 +42,6 @@ export const errorMessages = {
     "Error: Failed to send email due to a server-side error. Please try again later or contact the system administrator..",
   invalidRoleProvided:
     "Error: Invalid role in request params. Please try again later or contact the system administrator..",
+  failedForAdminAccess:
+    "Error: Access denied. Please sign in with an admin account or contact the system administrator for assistance.",
 };
