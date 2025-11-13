@@ -8,6 +8,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
+import { swaggerSpec } from "./swagger.js";
+import swaggerUi from "swagger-ui-express";
 
 const server = express();
 
@@ -73,9 +75,17 @@ server.use(`/api/${process.env.KRISHI_SETU_API_VERSION}/auth`, userAuthRouter);
 
 server.use(`/api/${process.env.KRISHI_SETU_API_VERSION}/auth`, adminAuthRouter);
 
+// Swagger setup
+if (process.env.NODE_ENV === "development") {
+  server.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  console.log(
+    `\nSwagger Docs available at http://localhost:${process.env.PORT}/api-docs\n`
+  );
+}
+
 //  Handle invalid request
 server.use(notFoundMiddleware);
 
-app.use(errorHandler);
+server.use(errorHandler);
 
 export default server;

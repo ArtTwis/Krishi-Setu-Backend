@@ -1,5 +1,4 @@
 import ApiError from "../utils/apiError.util.js";
-import { asyncHandler } from "../utils/async-handler.js";
 import { statusCodes } from "../constants/statusCodes.js";
 import { errorMessages } from "../constants/errorMessage.js";
 
