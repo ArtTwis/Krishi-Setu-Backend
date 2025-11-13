@@ -13,14 +13,10 @@ export const verifyJwtToken = async (req, res, next) => {
       req.header("authorization")?.replace("Bearer ", "");
 
     if (!token) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.unauthorizedRequest
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.unauthorized,
+        errorMessages.unauthorizedRequest
+      );
     }
 
     const decodedTokenInfo = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
@@ -34,32 +30,33 @@ export const verifyJwtToken = async (req, res, next) => {
     );
 
     if (!authResponse) {
-      return res
-        .status(statusCodes.error.notFound)
-        .json(
-          new ApiError(statusCodes.error.notFound, errorMessages.userNotFound)
-        );
+      throw new ApiError(
+        statusCodes.error.notFound,
+        errorMessages.userNotFound
+      );
     }
 
-    if (!authResponse.refreshToken) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.unauthorizedRequest
-          )
-        );
+    if (!authResponse?.refreshToken) {
+      throw new ApiError(
+        statusCodes.error.unauthorized,
+        errorMessages.sessionExpired
+      );
     }
 
     req.auth = authResponse;
 
     next();
   } catch (error) {
-    return res
-      .status(statusCodes.error.badRequest)
+    console.log("error : verifyJwtToken :>> ", error);
+    res
+      .status(error.statusCode || statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(statusCodes.error.badRequest, errorMessages.badRequest)
+        error instanceof ApiError
+          ? error
+          : new ApiError(
+              statusCodes.serverError.internalServerError,
+              errorMessages.internalServerError
+            )
       );
   }
 };
@@ -80,34 +77,31 @@ export const isAdmin = async (req, res, next) => {
     );
 
     if (!authResponse) {
-      return res
-        .status(statusCodes.error.notFound)
-        .json(
-          new ApiError(statusCodes.error.notFound, errorMessages.userNotFound)
-        );
+      throw new ApiError(
+        statusCodes.error.notFound,
+        errorMessages.userNotFound
+      );
     }
 
     if (authResponse.role !== UserTypeEnum.admin) {
-      return res
-        .status(statusCodes.error.forbidden)
-        .json(
-          new ApiError(
-            statusCodes.error.forbidden,
-            errorMessages.failedForAdminAccess
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.forbidden,
+        errorMessages.failedForAdminAccess
+      );
     }
 
     next();
   } catch (error) {
-    console.error("Admin verification error:", error);
-    return res
-      .status(statusCodes.error.unauthorized)
+    console.log("error : isAdmin :>> ", error);
+    res
+      .status(error.statusCode || statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(
-          statusCodes.error.unauthorized,
-          errorMessages.invalidAccessToken
-        )
+        error instanceof ApiError
+          ? error
+          : new ApiError(
+              statusCodes.serverError.internalServerError,
+              errorMessages.internalServerError
+            )
       );
   }
 };

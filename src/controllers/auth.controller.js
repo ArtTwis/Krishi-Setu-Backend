@@ -52,14 +52,10 @@ export const registerAccount = async (req, res) => {
     //  Check if user already exists
     const existing = await Model.findOne({ email });
     if (existing) {
-      return res
-        .status(statusCodes.error.conflicts)
-        .json(
-          new ApiError(
-            statusCodes.error.conflicts,
-            errorMessages.emailAlreadyExist
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.conflicts,
+        errorMessages.emailAlreadyExist
+      );
     }
 
     //  Generate verification token
@@ -126,15 +122,16 @@ export const registerAccount = async (req, res) => {
         )
       );
   } catch (error) {
-    console.log("error :>> ", error);
-    return res
-      .status(statusCodes.serverError.internalServerError)
+    console.log("error :>> ", error.error);
+    res
+      .status(error.statusCode || statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(
-          statusCodes.serverError.internalServerError,
-          error,
-          errorMessages.internalServerError
-        )
+        error instanceof ApiError
+          ? error
+          : new ApiError(
+              statusCodes.serverError.internalServerError,
+              errorMessages.internalServerError
+            )
       );
   }
 };
@@ -145,14 +142,10 @@ export const verifyAccount = async (req, res) => {
     const { role } = req;
 
     if (!role) {
-      return res
-        .status(statusCodes.error.badRequest)
-        .json(
-          new ApiError(
-            statusCodes.error.badRequest,
-            errorMessages.invalidRoleProvided
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.badRequest,
+        errorMessages.invalidRoleProvided
+      );
     }
 
     const Model = UserTypeEnum.admin === role ? AdminAuth : UserAuth;
@@ -162,11 +155,10 @@ export const verifyAccount = async (req, res) => {
     const { email } = decoded;
 
     if (!email) {
-      return res
-        .status(statusCodes.error.badRequest)
-        .json(
-          new ApiError(statusCodes.error.badRequest, errorMessages.invalidToken)
-        );
+      throw new ApiError(
+        statusCodes.error.badRequest,
+        errorMessages.invalidToken
+      );
     }
 
     const updatedAccount = await Model.findOneAndUpdate(
@@ -176,11 +168,10 @@ export const verifyAccount = async (req, res) => {
     );
 
     if (!updatedAccount) {
-      return res
-        .status(statusCodes.error.notFound)
-        .json(
-          new ApiError(statusCodes.error.notFound, errorMessages.userNotFound)
-        );
+      throw new ApiError(
+        statusCodes.error.notFound,
+        errorMessages.userNotFound
+      );
     }
 
     const response = updatedAccount.toObject();
@@ -190,16 +181,6 @@ export const verifyAccount = async (req, res) => {
 
     // Sending registration success mail to registered user
     const mail = await sendMail(MailTypeEnum.registration, response);
-    if (!mail) {
-      return res
-        .status(statusCodes.success.ok)
-        .json(
-          new ApiResponse(
-            statusCodes.success.ok,
-            successMessages.verifyUserAccountButFailedToSendConfirmationMail
-          )
-        );
-    }
     console.log("mail.messageId :>> ", mail.messageId);
 
     // Return success response
@@ -213,15 +194,16 @@ export const verifyAccount = async (req, res) => {
         )
       );
   } catch (error) {
-    console.log("error :>> ", error);
-    return res
-      .status(statusCodes.serverError.internalServerError)
+    console.log("error :>> ", error.error);
+    res
+      .status(error.statusCode || statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(
-          statusCodes.serverError.internalServerError,
-          error,
-          errorMessages.internalServerError
-        )
+        error instanceof ApiError
+          ? error
+          : new ApiError(
+              statusCodes.serverError.internalServerError,
+              errorMessages.internalServerError
+            )
       );
   }
 };
@@ -236,43 +218,28 @@ export const loginAccount = async (req, res) => {
     const authResponse = await Model.findOne({ email });
 
     if (!authResponse) {
-      return res
-        .status(statusCodes.error.notFound)
-        .json(
-          new ApiError(
-            statusCodes.error.notFound,
-            errorMessages.userNotFound,
-            errorMessages.userDoesNotExist
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.notFound,
+        errorMessages.userNotFound
+      );
     }
 
     //  Validate password
     const isPasswordValid = await authResponse.isPasswordCorrect(password);
     if (!isPasswordValid) {
-      return res
-        .status(statusCodes.error.badRequest)
-        .json(
-          new ApiError(
-            statusCodes.error.badRequest,
-            errorMessages.invalidCredential,
-            errorMessages.invalidCredential
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.badRequest,
+        errorMessages.invalidCredential
+      );
     }
 
     //  Check if verified and active
     const { isVerified, isActive } = authResponse;
     if (!(isVerified && isActive)) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.unauthorizedRequest,
-            errorMessages.unauthorizedRequest
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.unauthorized,
+        errorMessages.unauthorizedRequest
+      );
     }
 
     // Generate tokens
@@ -282,15 +249,10 @@ export const loginAccount = async (req, res) => {
     );
 
     if (!(accessToken && refreshToken)) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.failedToGenerateNewTokens,
-            errorMessages.failedToGenerateNewTokens
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.unauthorized,
+        errorMessages.failedToGenerateNewTokens
+      );
     }
 
     const response = authResponse.toObject();
@@ -315,15 +277,16 @@ export const loginAccount = async (req, res) => {
         )
       );
   } catch (error) {
-    console.log("error :>> ", error);
-    return res
-      .status(statusCodes.serverError.internalServerError)
+    console.log("error :>> ", error.error);
+    res
+      .status(error.statusCode || statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(
-          statusCodes.serverError.internalServerError,
-          error,
-          errorMessages.internalServerError
-        )
+        error instanceof ApiError
+          ? error
+          : new ApiError(
+              statusCodes.serverError.internalServerError,
+              errorMessages.internalServerError
+            )
       );
   }
 };
@@ -356,49 +319,42 @@ export const logoutAccount = async (req, res) => {
         )
       );
   } catch (error) {
-    console.log("error :>> ", error);
-    return res
-      .status(statusCodes.serverError.internalServerError)
+    console.log("error :>> ", error.error);
+    res
+      .status(error.statusCode || statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(
-          statusCodes.serverError.internalServerError,
-          error,
-          errorMessages.internalServerError
-        )
+        error instanceof ApiError
+          ? error
+          : new ApiError(
+              statusCodes.serverError.internalServerError,
+              errorMessages.internalServerError
+            )
       );
   }
 };
 
 export const reGenerateAccessToken = async (req, res) => {
-  const incomingRefreshToken =
-    req.cookies.refreshToken || req.body.refreshToken;
-
-  if (!incomingRefreshToken) {
-    return res
-      .status(statusCodes.error.unauthorized)
-      .json(
-        new ApiError(
-          statusCodes.error.unauthorized,
-          errorMessages.invalidRefreshToken
-        )
-      );
-  }
-
   try {
+    const incomingRefreshToken =
+      req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!incomingRefreshToken) {
+      throw new ApiError(
+        statusCodes.error.unauthorized,
+        errorMessages.missingRefreshToken
+      );
+    }
+
     const decodedToken = await jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
 
     if (!decodedToken) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.expiredRefreshToken
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.unauthorized,
+        errorMessages.expiredRefreshToken
+      );
     }
 
     const { role } = req.body;
@@ -409,26 +365,17 @@ export const reGenerateAccessToken = async (req, res) => {
       "-password -verificationToken"
     );
 
-    if (!(authResponse && authResponse.refreshToken)) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.invalidRefreshToken
-          )
-        );
-    }
-
-    if (incomingRefreshToken !== authResponse.refreshToken) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.invalidRefreshToken
-          )
-        );
+    if (
+      !(
+        authResponse &&
+        authResponse.refreshToken &&
+        incomingRefreshToken === authResponse.refreshToken
+      )
+    ) {
+      throw new ApiError(
+        statusCodes.error.unauthorized,
+        errorMessages.invalidRefreshToken
+      );
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -437,14 +384,10 @@ export const reGenerateAccessToken = async (req, res) => {
     );
 
     if (!accessToken && !refreshToken) {
-      return res
-        .status(statusCodes.serverError.internalServerError)
-        .json(
-          new ApiError(
-            statusCodes.serverError.internalServerError,
-            errorMessages.failedToGenerateNewTokens
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.requestTimeout,
+        errorMessages.failedToGenerateNewTokens
+      );
     }
 
     return res
@@ -460,13 +403,16 @@ export const reGenerateAccessToken = async (req, res) => {
       );
   } catch (error) {
     console.log("error :>> ", error);
-    return res
-      .status(statusCodes.serverError.internalServerError)
+    console.log("error :>> ", error.error);
+    res
+      .status(error.statusCode || statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(
-          statusCodes.serverError.internalServerError,
-          errorMessages.internalServerError
-        )
+        error instanceof ApiError
+          ? error
+          : new ApiError(
+              statusCodes.serverError.internalServerError,
+              errorMessages.internalServerError
+            )
       );
   }
 };
@@ -480,27 +426,19 @@ export const changePassword = async (req, res) => {
     const authResponse = await Model.findById(req.auth?._id);
 
     if (!authResponse) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.unauthorizedRequest
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.unauthorized,
+        errorMessages.unauthorizedRequest
+      );
     }
 
     const isPasswordCorrect = await authResponse.isPasswordCorrect(oldPassword);
 
     if (!isPasswordCorrect) {
-      return res
-        .status(statusCodes.error.badRequest)
-        .json(
-          new ApiError(
-            statusCodes.error.badRequest,
-            errorMessages.invalidOldPassword
-          )
-        );
+      throw new ApiError(
+        statusCodes.error.badRequest,
+        errorMessages.invalidOldPassword
+      );
     }
 
     authResponse.password = newPassword;
@@ -521,14 +459,16 @@ export const changePassword = async (req, res) => {
         )
       );
   } catch (error) {
-    console.log("error :>> ", error);
-    return res
-      .status(statusCodes.serverError.internalServerError)
+    console.log("error :>> ", error.error);
+    res
+      .status(error.statusCode || statusCodes.serverError.internalServerError)
       .json(
-        new ApiError(
-          statusCodes.serverError.internalServerError,
-          errorMessages.internalServerError
-        )
+        error instanceof ApiError
+          ? error
+          : new ApiError(
+              statusCodes.serverError.internalServerError,
+              errorMessages.internalServerError
+            )
       );
   }
 };

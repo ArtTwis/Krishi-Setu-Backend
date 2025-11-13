@@ -29,8 +29,8 @@ export const validateRequest = (schema) => {
         .json(
           new ApiError(
             statusCodes.error.validationError,
-            errors,
-            errorMessages.invalidFieldValues
+            errorMessages.invalidFieldValues,
+            errors
           )
         );
     }
