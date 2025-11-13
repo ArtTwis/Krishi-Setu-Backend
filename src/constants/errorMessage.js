@@ -11,7 +11,7 @@ export const errorMessages = {
   emailAlreadyExist:
     "Error: Email address already exists. Please choose a different email address to continue..",
   internalServerError:
-    "Error 500: Internal Server Error. We're experiencing technical difficulties, our team is on it. Please try again later..",
+    "Error: Internal Server Error. We're experiencing technical difficulties, our team is on it. Please try again later..",
   userDoesNotExist:
     "Error: Sorry, we couldn't find an account with that email address. Please double-check your email and try again..",
   invalidCredential:
@@ -44,4 +44,9 @@ export const errorMessages = {
     "Error: Invalid role in request params. Please try again later or contact the system administrator..",
   failedForAdminAccess:
     "Error: Access denied. Please sign in with an admin account or contact the system administrator for assistance.",
+  missingModel: "Error: Model is required for BaseService",
+  missingRefreshToken:
+    "Error: Refresh token is missing. Please log in to obtain a new token..",
+  sessionExpired:
+    "Error: Session is already expired. Please log in to start a new session..",
 };

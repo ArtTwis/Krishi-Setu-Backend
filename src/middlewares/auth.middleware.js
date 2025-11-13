@@ -7,107 +7,67 @@ import { UserTypeEnum } from "../constants/common.js";
 import { statusCodes } from "../constants/statusCodes.js";
 
 export const verifyJwtToken = async (req, res, next) => {
-  try {
-    const token =
-      req.cookies?.accessToken ||
-      req.header("authorization")?.replace("Bearer ", "");
+  const token =
+    req.cookies?.accessToken ||
+    req.header("authorization")?.replace("Bearer ", "");
 
-    if (!token) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.unauthorizedRequest
-          )
-        );
-    }
-
-    const decodedTokenInfo = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-
-    const { role } = req.body;
-
-    const Model = role === UserTypeEnum.admin ? AdminAuth : UserAuth;
-
-    const authResponse = await Model.findById(decodedTokenInfo?._id).select(
-      "-password -verificationToken"
+  if (!token) {
+    throw new ApiError(
+      statusCodes.error.unauthorized,
+      errorMessages.unauthorizedRequest
     );
-
-    if (!authResponse) {
-      return res
-        .status(statusCodes.error.notFound)
-        .json(
-          new ApiError(statusCodes.error.notFound, errorMessages.userNotFound)
-        );
-    }
-
-    if (!authResponse.refreshToken) {
-      return res
-        .status(statusCodes.error.unauthorized)
-        .json(
-          new ApiError(
-            statusCodes.error.unauthorized,
-            errorMessages.unauthorizedRequest
-          )
-        );
-    }
-
-    req.auth = authResponse;
-
-    next();
-  } catch (error) {
-    return res
-      .status(statusCodes.error.badRequest)
-      .json(
-        new ApiError(statusCodes.error.badRequest, errorMessages.badRequest)
-      );
   }
+
+  const decodedTokenInfo = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+  const { role } = req.body;
+
+  const Model = role === UserTypeEnum.admin ? AdminAuth : UserAuth;
+
+  const authResponse = await Model.findById(decodedTokenInfo?._id).select(
+    "-password -verificationToken"
+  );
+
+  if (!authResponse) {
+    throw new ApiError(statusCodes.error.notFound, errorMessages.userNotFound);
+  }
+
+  if (!authResponse?.refreshToken) {
+    throw new ApiError(
+      statusCodes.error.unauthorized,
+      errorMessages.sessionExpired
+    );
+  }
+
+  req.auth = authResponse;
+
+  next();
 };
 
 /**
  * Restrict access to admin users only
  */
 export const isAdmin = async (req, res, next) => {
-  try {
-    const token =
-      req.cookies?.accessToken ||
-      req.header("authorization")?.replace("Bearer ", "");
+  const token =
+    req.cookies?.accessToken ||
+    req.header("authorization")?.replace("Bearer ", "");
 
-    const decodedTokenInfo = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+  const decodedTokenInfo = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    const authResponse = await AdminAuth.findById(decodedTokenInfo?._id).select(
-      "-password -verificationToken"
-    );
+  const authResponse = await AdminAuth.findById(decodedTokenInfo?._id).select(
+    "-password -verificationToken"
+  );
 
-    if (!authResponse) {
-      return res
-        .status(statusCodes.error.notFound)
-        .json(
-          new ApiError(statusCodes.error.notFound, errorMessages.userNotFound)
-        );
-    }
-
-    if (authResponse.role !== UserTypeEnum.admin) {
-      return res
-        .status(statusCodes.error.forbidden)
-        .json(
-          new ApiError(
-            statusCodes.error.forbidden,
-            errorMessages.failedForAdminAccess
-          )
-        );
-    }
-
-    next();
-  } catch (error) {
-    console.error("Admin verification error:", error);
-    return res
-      .status(statusCodes.error.unauthorized)
-      .json(
-        new ApiError(
-          statusCodes.error.unauthorized,
-          errorMessages.invalidAccessToken
-        )
-      );
+  if (!authResponse) {
+    throw new ApiError(statusCodes.error.notFound, errorMessages.userNotFound);
   }
+
+  if (authResponse.role !== UserTypeEnum.admin) {
+    throw new ApiError(
+      statusCodes.error.forbidden,
+      errorMessages.failedForAdminAccess
+    );
+  }
+
+  next();
 };
