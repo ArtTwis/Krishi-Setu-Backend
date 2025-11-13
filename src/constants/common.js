@@ -1,3 +1,6 @@
+export const APPLICATION_DESCRIPTION =
+  "AgriTrack is a Node.js-based backend application designed to store, manage, and track comprehensive farmer records. personal details, land ownership, crop cultivation, financial information, bank loans, and government scheme benefits in a structured digital format.";
+
 export const DB_NAME = "krishisetu";
 
 export const APPLICATION_NAME = "Krishi-Setu";

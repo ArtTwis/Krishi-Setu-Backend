@@ -21,6 +21,27 @@ import { isAdmin, verifyJwtToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Get all users
+ *     description: Returns a list of all users in the system
+ *     responses:
+ *       200:
+ *         description: List of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ */
 router
   .route("/user/register")
   .post(
