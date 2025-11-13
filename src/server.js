@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { notFoundMiddleware } from "./middlewares/notFound.middleware.js";
+import { errorHandler } from "./middlewares/error.middleware.js";
 
 const server = express();
 
@@ -74,5 +75,7 @@ server.use(`/api/${process.env.KRISHI_SETU_API_VERSION}/auth`, adminAuthRouter);
 
 //  Handle invalid request
 server.use(notFoundMiddleware);
+
+app.use(errorHandler);
 
 export default server;
