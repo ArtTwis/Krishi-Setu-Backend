@@ -1,0 +1,14 @@
+Todos:
+  You can write plain text notes/descriptions wherever you want
+  New:
+    ☐ Fix swagger documentation
+    ☐ Implement services for controller function to have neat and clean code
+    ☐ Create mongoose models to store farmer info
+    ☐ Implement wingston to have proper logs
+    ☐ Implement cache to store recently fetched data
+
+  Done:
+    ✔
+     
+  Cancelled:
+    ✘ 
