@@ -1,4 +1,4 @@
-import { APPLICATION_NAME } from "../constants/common.js";
+import { APPLICATION_NAME, defaultPassword } from "../constants/common.js";
 
 const getUserDefaultPassword = (mobile) => defaultPassword + mobile.slice(-4);
 

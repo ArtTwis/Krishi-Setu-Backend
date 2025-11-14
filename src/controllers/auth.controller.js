@@ -146,6 +146,24 @@ export const verifyAccount = async (req, res) => {
     );
   }
 
+  const account = await Model.findOne({ email });
+
+  if (!account) {
+    throw new ApiError(statusCodes.error.notFound, errorMessages.userNotFound);
+  }
+
+  if (account.isVerified) {
+    return res
+      .status(statusCodes.success.ok)
+      .json(
+        new ApiResponse(
+          statusCodes.success.ok,
+          {},
+          successMessages.alreadyVerifyAccount
+        )
+      );
+  }
+
   const updatedAccount = await Model.findOneAndUpdate(
     { email },
     { $set: { isVerified: true, isActive: true } },

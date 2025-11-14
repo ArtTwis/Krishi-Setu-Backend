@@ -16,7 +16,8 @@ export const successMessages = {
     "User account re-activated! They can now resume using their account without any restrictions..",
   updatedUserProfile:
     "User information updated! Your profile now reflects the latest changes..",
-  verifyUserAccount: "User account verified successfully!",
+  verifyAccount: "Account verified successfully!",
+  alreadyVerifyAccount: "Account is already verified!",
   verifyUserAccountButFailedToSendConfirmationMail:
     "User account verified successfully but failed to send confirmation mail..",
 };
